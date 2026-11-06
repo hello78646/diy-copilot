@@ -294,6 +294,7 @@ function bootstrap(){
     priceVersions:[{id:'2026-11-03',date:'2026-11-03',label:'内置报价（11.3 笔记本 + 台式配置表）',active:true,items:((seed['price_laptop']||[]).concat(seed['price_desktop']||[])).map(normItem),created:Date.now()}],
     settings:{showCost:false,llm:{url:'https://api.deepseek.com/chat/completions',model:'deepseek-chat',key:''}},
     rules:seed.rules||[],intents:seed.intents||[],variables:seed.variables||[],redlines:seed.red_lines||[],
+    rent_catalog:seed.rent_catalog||[],rent_buyout:seed.rent_buyout||[],knowledge:seed.knowledge||[],
     analytics:[]
   };
 }
@@ -304,6 +305,7 @@ function load(){
     if(d&&d.customers&&d.priceVersions){
       /* 规则/意图/变量/红线属于配置，始终用最新内置版本；本地缓存只保留客户、报价、设置等业务数据 */
       d.rules=seed.rules;d.intents=seed.intents;d.variables=seed.variables;d.redlines=seed.redlines;
+      d.rent_catalog=seed.rent_catalog;d.rent_buyout=seed.rent_buyout;d.knowledge=seed.knowledge;
       /* 内置报价升级（例如新接入台式的配置表）时，强制用新版内置条目，避免旧缓存缺少品类 */
       const sv=(seed.priceVersions||[]).find(v=>v.id==='2026-11-03');
       const cv=(d.priceVersions||[]).find(v=>v.id==='2026-11-03');
