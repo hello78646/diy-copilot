@@ -582,8 +582,10 @@ function rentCalc(msg){
   if(mode==='buyout'){
     const cfg=(DB.rent_buyout||[]).map(c=>{
       let s=0;
-      if(c.cpuKey&&h.toUpperCase().includes(c.cpuKey))s+=2;
-      if(c.gpuKey&&h.toUpperCase().includes(c.gpuKey.replace('RTX','')))s+=1;
+      const cpuN=(String(c.CPU||'').match(/\d{4}/)||[])[0]||'';
+      const gpuN=(String(c.显卡||'').match(/\d{4}/)||[])[0]||'';
+      if(cpuN&&h.includes(cpuN))s+=2;
+      if(gpuN&&h.includes(gpuN))s+=1;
       return {c,s};
     }).filter(x=>x.s>0).sort((a,b)=>b.s-a.s)[0];
     if(!cfg)return {mode:mode,months:months,needConfig:true};
