@@ -502,7 +502,7 @@ function normItem(r){
 function bootstrap(){
   const seed=window.COPILOT_DATA||{};
   return {
-    customers:[{id:'c1',name:'新客户',stage:'问需',slots:{},b2b:{},note:'',msgDraft:'',history:[],created:Date.now()}],
+    customers:[{id:'c1',name:'新客户',stage:'问需',slots:{},b2b:{},ident:'unknown',note:'',msgDraft:'',history:[],created:Date.now()}],
     activeCustomer:'c1',
     priceVersions:[{id:'2026-11-03',date:'2026-11-03',label:'内置报价（11.3 笔记本 + 台式配置表）',active:true,items:((seed['price_laptop']||[]).concat(seed['price_desktop']||[])).map(normItem),created:Date.now()}],
     settings:{showCost:false,llm:{url:'https://api.deepseek.com/chat/completions',model:'deepseek-chat',key:''}},
@@ -521,6 +521,8 @@ function load(){
       d.rent_catalog=seed.rent_catalog;d.rent_buyout=seed.rent_buyout;d.knowledge=seed.knowledge;
       (d.customers||[]).forEach(c=>{
         c.b2b=c.b2b||{};
+        /* 旧缓存没有身份字段：先标未定，等下一句话再锁定，避免历史客户被默认成政企 */
+        c.ident=c.ident||'unknown';
         /* 旧缓存里 V02 存的是「8000元」这类值，迁移成下拉枚举，否则右栏一直显示待确认 */
         const v2=c.slots&&c.slots.V02;
         if(v2&&!['≤4k','4-5k','5-6k','6-7k','7-8k','8k+'].includes(v2))c.slots.V02=budgetEnum(budgetFromEnum(v2));
@@ -768,6 +770,9 @@ function renderRight(){
   $('#rightBody').innerHTML=
     '<div class="info-row"><span class="k">客户姓名</span><span class="vwrap">'+
       '<input id="cName" value="'+esc(c.name||'')+'" placeholder="待确认"></span></div>'+
+    '<div class="info-row"><span class="k">身份口径</span><span class="vwrap">'+
+      '<span class="v'+(c.ident?'':' ph')+'" style="border:none;background:none;padding-left:0">'+
+      (c.ident==='b2b'?'政企租赁':(c.ident==='personal'?'个人购置':'未定'))+(c.identLocked?'（已锁定）':'')+'</span></span></div>'+
     rowSel('客户类型','V01')+
     rowSel('客户属性','V14')+
     (/政企|学校|电竞/.test(c.slots.V14||'')?
@@ -1046,16 +1051,62 @@ function rentCalc(msg){
   if(!cat)return {mode:mode,months:months,needConfig:true};
   return {mode:mode,months:months,it:cat.c};
 }
-function matchRules(hay){
+/* 客户身份：会话开始就锁定「个人购置 / 政企租赁」，后续轮次沿用，单个“公司”字样不能把个人客户冲成政企 */
+const ID_B2B=/我们(?:公司|单位|学校|医院|厂|集团|团队)|我(?:们)?要采购|公司采购|单位采购|帮公司|帮单位|对公|开票|发票|签合同|招标|政企|采购单|批量采购|设备清单|租赁|租电脑|想租|能不能租|月租/;
+const ID_PERSONAL=/我爸|我妈|父母|爸妈|家里|家人|媳妇|老婆|老公|对象|女朋友|男朋友|自己用|自己买|个人用|个人买|学生|宿舍|同学|大学|考研|高三/;
+const ID_OWN_ORG=/我们(?:公司|单位|学校|医院|厂|集团|团队)|公司采购|单位采购|帮公司|帮单位|对公|政企|招标|采购单|批量采购|设备清单|租赁/;
+const ID_ASK_OURS=/你们(?:公司|单位)|贵司/;
+const ID_SWITCH_B2B=ID_OWN_ORG;
+const ID_SWITCH_PERSONAL=/个人买|个人用|自己用|不开票|不用发票/;
+/* 返回 '' 表示这句没有身份信号（保持未定） */
+function identOf(t){
+  const s=String(t||'');
+  /* 「你们公司有保障吗」是在问我们公司靠不靠谱，不是客户自己是政企 —— 这类句子不算身份信号 */
+  const b=ID_OWN_ORG.test(s)||(!ID_ASK_OURS.test(s)&&ID_B2B.test(s));
+  const p=ID_PERSONAL.test(s);
+  /* 同时出现个人和政企信号时，只有明确在谈租赁才按政企租赁口径，其余保持未定 */
+  if(b&&p)return /租|租赁/.test(s)?'b2b':'';
+  if(b)return 'b2b';
+  if(p)return 'personal';
+  return '';
+}
+function lockIdentity(c,msg){
+  const m=String(msg||'');
+  if(!c.ident)c.ident='unknown';
+  const sig=identOf(m);
+  if(!sig)return {switched:false};
+  if(c.ident==='unknown'){
+    c.ident=sig;c.identLocked=1;c.identFrom=String(m).slice(0,40);
+    if(c.slots)c.slots.V14=(sig==='b2b'?(/学校/.test(m)?'学校':'政企单位'):'个人');
+    return {switched:false,locked:true,sig:sig};
+  }
+  if(sig!==c.ident){
+    /* 已锁定身份：只有出现明确、无歧义的切换词才允许改，并记录提示 */
+    const sw=(sig==='b2b'?ID_SWITCH_B2B:ID_SWITCH_PERSONAL).test(m);
+    if(sw){
+      c.prevIdent=c.ident;c.ident=sig;c.identLocked=1;c.identSwitch=msg;
+      if(c.slots)c.slots.V14=(sig==='b2b'?(/学校/.test(m)?'学校':'政企单位'):'个人');
+      return {switched:true,sig:sig};
+    }
+  }
+  return {switched:false};
+}
+function matchRules(hay,ident){
   const h=String(hay||'').replace(/\s/g,'');
   const isDesk=/台式|主机|装机|组装|DIY|自己配|(?:r[3579]|i[3579])\d{4,5}|rtx|rx\d{3,4}/i.test(h);
   const isRent=isRental(h);
-  const isB2B=/企业|公司|单位|政企|采购|批量|台数|几台|对公|营业执照|法人|招标|报价单/.test(h);
+  const isB2B=ident==='b2b'?true:((ident==='personal'||ident==='unknown')?false:/企业|公司|单位|政企|采购|批量|台数|几台|对公|营业执照|法人|招标|报价单/.test(h));
   const scored=DB.rules.map(r=>{
+    /* 身份已锁定为个人/未定时，政企与租赁口径的规则整条不参与打分，避免串线 */
+    if((ident==='personal'||ident==='unknown')&&(r['一级分类']==='政企'||r['一级分类']==='租赁'))return {r,sc:0};
     const kws=String(r['触发关键词']||'').split(/[\/、,，]/).map(s=>s.trim())
       .filter(s=>s&&!s.includes('（')&&s.length>=2);
     let sc=0;
     kws.forEach(k=>{if(h.includes(k.replace(/\s/g,'')))sc+=1+Math.min(3,Math.floor(k.length/2));});
+    /* 同义说法加权：「有保障吗/是什么公司」属于信任顾虑，不是政企采购 */
+    const ALIAS=[{re:/有保障|靠谱|正规|是什么公司|靠得住|安全吗/,cat:'信任',add:4},{re:/怕|担心|被骗|不放心/,cat:'信任',add:2}];
+    ALIAS.forEach(a=>{if(a.re.test(h)&&r['一级分类']===a.cat)sc+=a.add;});
+    if(/是什么公司|哪个公司|公司注销|跑路|正规公司/.test(h)&&r['一级分类']==='信任'&&r['二级分类']==='公司资质')sc+=6;
     /* 客户明确说台式/主机时，台式专用规则优先于笔记本通用规则 */
     if(isDesk&&r['一级分类']==='台式机'&&sc>0)sc+=3;
     if(isDesk&&r['一级分类']!=='台式机')sc-=1;
@@ -1136,7 +1187,18 @@ function build(rule,item,matched,askPrice,msg,c){
     const svc=item&&item.分类==='台式整机'?'三年只换不修 + 终身软件售后':'四年软件售后';
     text+='\n我们不靠压价抢单：同样预算我帮你把配置配到最合适，'+svc+'一直跟着你，算总账更划算。';
   }
+  /* 身份未定：不默认政企，先在草稿末尾自然追问一句确认 */
+  if(c&&c.ident==='unknown'&&!c.identLocked&&!isRental(msg||'')){
+    text+='\n方便确认一下：是你自己个人买，还是公司/单位采购？我按对应口径给你算。';
+  }
   const checks=checkDraft(text,item,msg);
+  /* 身份切换提示：草稿已按新口径生成，提醒销售一眼看到 */
+  if(c&&c.identSwitch){
+    const to=c.ident==='b2b'?'政企租赁':'个人购置';
+    checks.unshift({level:'warn',msg:'客户身份已切换为「'+to+'」口径（触发：'+String(c.identSwitch).slice(0,24)+'），这稿按新口径生成'});
+    c.identSwitch='';
+  }
+  if(c&&c.ident==='unknown'&&!c.identLocked)checks.unshift({level:'warn',msg:'客户身份未定（个人/政企都还没信号）：先按个人口径答，并追问一句确认，别默认政企'});
   return {text:text,item:item,rule:rule||{规则ID:'通用',一级分类:'通用',二级分类:'问需',禁忌:'',回答目标:'',下一步动作:''},matched:matched||(rule?[rule]:[]),checks:checks,original:text,askPrice:!!askPrice,msg:msg||''};
 }
 function checkDraft(text,item,msg){
@@ -1191,12 +1253,13 @@ function checkDraft(text,item,msg){
 function generate(){
   const c=ac();
   const msg=($('#msgInput').value||'').trim();
+  const idr=msg?lockIdentity(c,msg):{switched:false};
   const got=msg?extractSlots(msg,c):0;
   const filled=Object.values(c.slots||{}).filter(Boolean).join(' ');
   if(!msg&&!filled){toast('先贴客户消息，或在右侧填客户信息');return;}
   if(msg){c.history.push({role:'customer',text:msg,ts:Date.now()});c.msgDraft='';}
   const hay=[msg,c.note,filled,Object.values(c.b2b||{}).join(' ')].join(' ');
-  const rules=matchRules(hay);
+  const rules=matchRules(hay,c.ident);
   const item=findItem(hay);
   const primary=rules[0]||null;
   const askPrice=/多少钱|价格|报价|卖多少|怎么卖|什么价/.test(msg);
@@ -1332,7 +1395,7 @@ async function aiDirect(){
   const filled=Object.values(c.slots||{}).filter(Boolean).join(' ');
   if(!msg&&!filled){toast('先发一条客户消息');return;}
   const hay=[msg,c.note,filled,Object.values(c.b2b||{}).join(' ')].join(' ');
-  const rules=matchRules(hay);
+  const rules=matchRules(hay,c.ident);
   const item=findItem(hay);
   let ctx='客户原话：'+(msg||'（见备注）')+'\n';
   if(c.slots&&Object.keys(c.slots).length)ctx+='已采信息：'+filled+'\n';
@@ -1791,7 +1854,7 @@ $('#typeFilter').onchange=renderCustomers;
 $('#btnAddCust').onclick=()=>{
   const name=prompt('客户称呼（如：小王 / 客32）','新客户');
   if(name===null)return;
-  const c={id:uid(),name:name.trim()||'新客户',stage:'问需',slots:{},b2b:{},note:'',msgDraft:'',history:[],created:Date.now()};
+  const c={id:uid(),name:name.trim()||'新客户',stage:'问需',slots:{},b2b:{},ident:'unknown',note:'',msgDraft:'',history:[],created:Date.now()};
   DB.customers.push(c);DB.activeCustomer=c.id;DRAFT=null;renderAll();
 };
 </script>
