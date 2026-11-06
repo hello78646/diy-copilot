@@ -159,30 +159,80 @@ button,input,select,textarea{font-family:inherit;font-size:14px}
 .toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,20px);background:#123a3a;border:1px solid #217a72;
   color:#c9fff7;padding:9px 16px;border-radius:10px;font-size:13px;opacity:0;pointer-events:none;transition:.25s;z-index:60}
 .toast.show{opacity:1;transform:translate(-50%,0)}
+/* 新手引导 */
+.guide{margin-bottom:12px;border:1px solid #2b4a58;border-radius:12px;padding:11px 13px;
+  background:linear-gradient(135deg,rgba(20,48,58,.72),rgba(24,30,44,.9));box-shadow:0 6px 18px rgba(0,0,0,.22)}
+.guide-h{display:flex;align-items:center;gap:8px;font-weight:700;font-size:13px;color:#bff3ea}
+.guide-h .mini{margin-left:auto}
+.steps{display:grid;gap:7px;margin-top:9px}
+.step{display:flex;gap:9px;align-items:flex-start;font-size:13px;color:#dbe8f7}
+.step b{flex:none;width:22px;height:22px;border-radius:7px;display:grid;place-items:center;font-size:12px;
+  background:#123a44;border:1px solid #256273;color:#7de3d8}
+.guide-f{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px}
+.hint{font-size:11px;color:var(--dim);line-height:1.5}
+.empty-guide{margin-top:12px;padding:16px;border:1px dashed #2f4258;border-radius:12px;background:#101823;text-align:center}
+.empty-guide b{color:#cfe3f5}
+.empty-guide .hint{display:block;margin-top:6px}
+.fold{border:1px solid #26303f;border-radius:10px;padding:8px 10px;margin-top:12px;background:#131b26}
+.fold summary{cursor:pointer;font-size:12px;color:#b9c7da;display:flex;align-items:center;gap:8px}
+.fold summary::-webkit-details-marker{display:none}
+.fold summary:before{content:"▸";color:var(--teal)}
+.fold[open] summary:before{content:"▾"}
+.fold-b{padding-top:10px}
+
+/* 工具抽屉 */
+.drawer-bg{position:fixed;inset:0;background:rgba(4,7,11,.62);opacity:0;pointer-events:none;transition:.2s;z-index:40}
+.drawer-bg.on{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;right:0;height:100vh;width:min(360px,92vw);z-index:41;
+  background:linear-gradient(180deg,#18212e,#121821);border-left:1px solid #2b3a4d;
+  transform:translateX(102%);transition:transform .24s ease;display:flex;flex-direction:column;box-shadow:-14px 0 40px rgba(0,0,0,.45)}
+.drawer.on{transform:translateX(0)}
+.drawer-h{display:flex;align-items:center;gap:8px;padding:13px 15px;border-bottom:1px solid var(--line);font-weight:700}
+.drawer-b{flex:1;overflow:auto;padding:14px 15px;display:flex;flex-direction:column;gap:9px}
+.drawer-b .wide{width:100%;justify-content:center;text-align:left;padding:10px 12px}
+.drawer-b .hint{margin:-3px 0 7px 2px}
+.x{border:0;background:transparent;color:var(--sub);font-size:20px;line-height:1;cursor:pointer}
+.x:hover{color:var(--txt)}
+
 @media(max-width:1080px){
   .shell{grid-template-columns:1fr;overflow:auto}
   .pane{min-height:320px}
+  .warnline{display:none}
 }
 </style>
 </head>
 <body>
 
 <div class="top">
-  <div class="logo"><span class="mark"></span>DIY电脑销售 Copilot <small>话术草稿 · 报价校验（静态版）</small></div>
+  <div class="logo"><span class="mark"></span>DIY电脑销售 Copilot <small>三步出话术 · 报价校验（公开静态版）</small></div>
   <div class="grow"></div>
   <span class="warnline">出货前请与老板确认最终价</span>
   <span id="verChip" class="chip"><span class="dot"></span>报价表</span>
   <span id="aiChip" class="chip"><span class="dot"></span>AI</span>
-  <button class="btn primary" id="btnQuickPrice">上传报价表</button>
-  <input type="file" id="quickPriceFile" accept=".csv,.tsv,.txt,.xlsx,.json" style="display:none">
-  <button class="btn" id="btnPrice">报价表</button>
-  <button class="btn ghost" id="btnSettings">设置</button>
+  <button class="btn ghost" id="btnGuide" title="重新展开三步使用引导">使用说明</button>
+  <button class="btn primary" id="btnTools" title="更新报价、设置、备份都在这里">工具 / 更多</button>
+</div>
+
+<div class="drawer-bg" id="drawerBg"></div>
+<div class="drawer" id="toolDrawer">
+  <div class="drawer-h">工具与数据 <span class="grow"></span><button class="x" id="drawerClose" title="关闭">×</button></div>
+  <div class="drawer-b">
+    <div class="hint">日常销售只用中间三步；这里是更新报价、设置和备份。</div>
+    <button class="btn primary wide" id="btnQuickPrice">上传今日报价表（选文件）</button>
+    <div class="hint">每天把微信群里的报价文件传进来，当天生效；也可以点下面「报价表」直接粘贴原文。</div>
+    <input type="file" id="quickPriceFile" accept=".csv,.tsv,.txt,.xlsx,.json" style="display:none">
+    <button class="btn wide" id="btnPrice">报价表 / 版本管理</button>
+    <div class="hint">粘贴微信报价原文 → 解析 → 核对 → 保存并生效；可切换历史版本。</div>
+    <button class="btn wide" id="btnSettings">设置（AI / 新人模式 / 备份）</button>
+    <div class="hint">配置 AI Key、隐藏成本、开启新人模式、导出备份。</div>
+  </div>
 </div>
 
 <div class="shell">
   <aside class="pane">
-    <div class="pane-h">客户 <span class="grow"></span><button class="mini" id="btnAddCust">+ 新建</button></div>
+    <div class="pane-h">客户（可选）<span class="grow"></span><button class="mini" id="btnAddCust">+ 新建</button></div>
     <div class="pane-b">
+      <div class="hint" style="margin-bottom:8px">不选客户也能直接生成；选中后对话会归档到该客户。</div>
       <input class="search" id="custSearch" placeholder="搜索客户 / 机型 / 备注">
       <div id="custList" style="margin-top:10px"></div>
     </div>
@@ -193,7 +243,7 @@ button,input,select,textarea{font-family:inherit;font-size:14px}
   </section>
 
   <aside class="pane">
-    <div class="pane-h">客户信息 <span class="grow"></span><span style="font-size:11px;color:var(--dim)">成本不对客户展示</span></div>
+    <div class="pane-h">客户资料与报价查询（可选）<span class="grow"></span><span style="font-size:11px;color:var(--dim)">不填也能生成</span></div>
     <div class="pane-b" id="rightBody"></div>
   </aside>
 </div>
@@ -203,14 +253,15 @@ button,input,select,textarea{font-family:inherit;font-size:14px}
   <div class="mbox">
     <div class="mh">每日报价表 <span class="grow"></span><button class="x" data-close="mPrice">×</button></div>
     <div class="mb">
+      <div class="hint" style="margin-bottom:10px">每天一次：选日期 → 粘贴原文或选文件 → 点「解析预览」→ 核对型号和价格 → 点「保存并生效」。当天所有人用的都是这份。</div>
       <div class="row gap8" style="margin-bottom:8px">
         <label class="lbl" style="margin:0">报价日期</label>
         <input type="date" class="in" id="priceDate" style="width:160px">
         <label class="lbl" style="margin:0 0 0 10px">文件</label>
         <input type="file" id="priceFile" accept=".csv,.tsv,.txt,.xlsx,.json" style="color:var(--sub);font-size:12px">
-        <button class="btn" id="btnParse">解析</button>
+        <button class="btn" id="btnParse">解析预览</button>
       </div>
-      <textarea class="ta" id="pricePaste" rows="5" placeholder="粘贴当日微信报价原文（支持自由文本，例如：机械革命 无界15X R7 H255 16 1T 240hz 白色 5100 建议卖5899 ｜ 也支持带表头的 CSV/TSV）"></textarea>
+      <textarea class="ta" id="pricePaste" rows="5" placeholder="把当天微信报价原文整段粘到这里（例：机械革命 无界15X R7 H255 16 1T 240hz 白色 5100 建议卖5899）"></textarea>
       <div class="sect">解析预览（可直接改，保存前请核对型号与两个价格）</div>
       <div id="previewWrap"><div class="empty">还没有解析结果</div></div>
       <div class="sect">版本记录</div>
@@ -228,23 +279,25 @@ button,input,select,textarea{font-family:inherit;font-size:14px}
 <!-- 设置 -->
 <div class="modal" id="mSet">
   <div class="mbox" style="width:min(680px,94vw)">
-    <div class="mh">设置 <span class="grow"></span><button class="x" data-close="mSet">×</button></div>
+    <div class="mh">设置（可选）<span class="grow"></span><button class="x" data-close="mSet">×</button></div>
     <div class="mb">
-      <div class="sect">AI 润色（可选，不填也能用规则草稿）</div>
+      <div class="sect">AI 连接（可选）</div>
+      <div class="hint" style="margin-bottom:8px">不填也能用本地规则生成草稿；只有「AI 直接写整段」和「AI 润色」需要它。Key 只存在本机浏览器。</div>
       <div class="fld"><label>接口地址（OpenAI 兼容 / Dify / Coze 代理）</label><input class="in" id="llmUrl"></div>
       <div class="grid2">
         <div class="fld"><label>模型</label><input class="in" id="llmModel"></div>
         <div class="fld"><label>API Key</label><input class="in" id="llmKey" type="password" placeholder="仅存在本机浏览器"></div>
       </div>
-      <div class="sect">显示与统计</div>
+      <div class="sect">显示与统计（仅影响你看到的界面）</div>
       <label class="chk ok" style="cursor:pointer;display:flex;gap:8px;align-items:center">
         <input type="checkbox" id="showCost"> 显示成本 / 毛利（敏感，仅自己看）
       </label>
       <label class="chk warn" style="cursor:pointer;display:flex;gap:8px;align-items:center;margin-top:6px">
         <input type="checkbox" id="newbieChk"> 新人模式（隐藏成本、强制红线检查、草稿附必检清单）
       </label>
+      <div class="hint" style="margin-top:5px">新人模式适合培训期：看不到成本，草稿上方会多出一份必检清单。</div>
       <div id="stats" class="muted" style="margin-top:10px"></div>
-      <div class="sect">数据</div>
+      <div class="sect">数据（换电脑时用）</div>
       <div class="row gap8">
         <button class="btn" id="btnExport">导出备份 JSON</button>
         <button class="btn" id="btnImport">导入备份</button>
@@ -369,9 +422,9 @@ function renderTop(){
 }
 function renderAIChip(){
   const el=$('#aiChip');if(!el)return;
-  el.innerHTML='<span class="dot"></span>'+(AI_ON?('AI 已接 · '+esc(AI_MODEL||'LLM')):'AI 未接（纯规则）');
+  el.innerHTML='<span class="dot"></span>'+(AI_ON?('AI 已接 · '+esc(AI_MODEL||'LLM')):'AI 未配置（规则可用）');
   el.className='chip'+(AI_ON?'':' bad');
-  el.title=AI_ON?'AI 润色/直出已启用':'在 llm_config.json 配置 Key 后重启服务即可启用';
+  el.title=AI_ON?'AI 直接写整段 / 润色已启用':'未配置 AI Key：规则草稿仍可正常使用；需要 AI 时到「工具 / 更多 → 设置」填写';
 }
 
 /* ============ 渲染：客户列表 ============ */
@@ -396,26 +449,50 @@ function renderCustomers(){
   });
 }
 
+/* ============ 新手引导 ============ */
+function guideOff(){try{return localStorage.getItem('copilot_guide')==='off'}catch(e){return false}}
+function guideHtml(){
+  if(guideOff())return '';
+  return '<div class="guide">'+
+    '<div class="guide-h">新手三步走<span class="grow"></span><button class="mini" data-guide-close="1">知道了，收起</button></div>'+
+    '<div class="steps">'+
+      '<div class="step"><b>①</b><span>把客户在微信里的原话，直接粘到下面的输入框</span></div>'+
+      '<div class="step"><b>②</b><span>点「生成回复草稿」，系统按公司规则和当日报价写好</span></div>'+
+      '<div class="step"><b>③</b><span>看红线提示，确认没问题就「复制发给客户」</span></div>'+
+    '</div>'+
+    '<div class="guide-f"><button class="btn primary" data-demo="1">用示例试试</button>'+
+    '<span class="hint">会填入一条示例消息并自动生成草稿，不用自己打字</span></div>'+
+  '</div>';
+}
+function emptyGuideHtml(){
+  return '<div class="empty-guide"><b>还没有生成草稿</b>'+
+    '<span class="hint">先在上面①粘贴客户消息，再点②生成；第一次用可以直接点下面按钮。</span>'+
+    '<div style="margin-top:10px"><button class="btn primary" data-demo="1">用示例试试</button></div></div>';
+}
+
 /* ============ 渲染：中栏 ============ */
 function renderMid(){
   const c=ac();
   const box=$('#midBody');
   const h=c.history||[];
   box.innerHTML=
+    guideHtml()+
     '<div class="mid-head"><div><div class="cust-name">'+esc(c.name)+'</div>'+
     '<div class="cust-sub">'+esc(c.slots.V01||'未填机型')+' · '+esc(c.slots.V02||'预算未知')+' · '+esc(c.slots.V05||'入手时间未知')+(c.state&&c.state.next?' · 下一步：'+esc(c.state.next):'')+'</div></div>'+
     '<span class="grow"></span><span class="chip">'+esc(c.stage||'问需')+'</span></div>'+
-    '<label class="lbl">客户最新消息（直接粘贴原文）</label>'+
-    '<textarea class="ta" id="msgInput" rows="3" placeholder="例：哥，5000元装台电脑，推荐一下配置呗，不包含显示器">'+esc(c.msgDraft||'')+'</textarea>'+
-    '<div class="row gap8 mt8"><button class="btn primary" id="btnGen">生成回复草稿</button>'+
-    '<button class="btn primary" id="btnAIDirect" title="由 AI 结合规则与当日报价直接写整段回复">AI 直出</button>'+
-    '<button class="btn" id="btnClrMsg">清空输入</button>'+
-    '<span class="grow"></span><span class="muted">'+(DRAFT?('命中 '+DRAFT.matched.map(r=>r.规则ID).join(' / ')):'')+'</span></div>'+
-    (DRAFT?draftHtml():'')+
+    '<div class="sect">第 1 步 · 粘贴客户消息</div>'+
+    '<label class="lbl" style="margin-top:0">客户微信原话（直接复制粘贴，不用整理）</label>'+
+    '<textarea class="ta" id="msgInput" rows="4" placeholder="例：哥，5000元装台电脑，推荐一下配置呗，不包含显示器">'+esc(c.msgDraft||'')+'</textarea>'+
+    '<div class="row gap8 mt8"><button class="btn primary" id="btnGen" title="按规则 + 当日报价生成可直接发送的回复">第 2 步 · 生成回复草稿</button>'+
+    '<button class="btn" id="btnAIDirect" title="让 AI 直接写一整段回复；需先在「工具 / 更多 → 设置」配置 Key">AI 直接写整段（可选）</button>'+
+    '<button class="btn ghost" id="btnClrMsg">清空输入</button>'+
+    '<span class="grow"></span><span class="muted">'+(DRAFT?('参考规则 '+DRAFT.matched.map(r=>r.规则ID).join(' / ')):'')+'</span></div>'+
+    '<div class="hint mt8">草稿只按当日报价和公司规则生成，不会提到成本；发送前看下面红线提示。</div>'+
+    (DRAFT?draftHtml():emptyGuideHtml())+
     '<div class="sect">对话记录 <span class="grow"></span>'+(h.length?'<button class="mini" id="btnClrHis">清空</button>':'')+'</div>'+
     '<div class="history">'+(h.length?h.map(x=>
       '<div class="hitem '+x.role+'"><div class="ht">'+(x.role==='customer'?'客户':'我方')+' · '+fmtTime(x.ts)+'</div>'+
-      '<div class="hx">'+esc(x.text)+'</div></div>').join(''):'<div class="empty">生成后点「复制并标记已发送」会自动归档到这里</div>')+'</div>';
+      '<div class="hx">'+esc(x.text)+'</div></div>').join(''):'<div class="empty">点「复制并标记已发送」后，对话会自动归档到这里</div>')+'</div>';
 
   const msg=$('#msgInput');
   msg.oninput=()=>{c.msgDraft=msg.value;};
@@ -430,24 +507,26 @@ function renderMid(){
 function draftHtml(){
   const d=DRAFT;
   const blocked=d.checks.some(x=>x.level==='block');
-  return '<div class="sect">命中规则（点一条可换用）</div>'+
+  return '<div class="sect">第 3 步 · 检查并复制</div>'+
+    '<div class="hint" style="margin-bottom:8px">下面是这次参考的话术规则，点其他一条可以换一种说法。</div>'+
     '<div class="rules">'+(d.matched.length?d.matched.map((r,i)=>
       '<div class="rule '+(r.规则ID===d.rule.规则ID?'on':'')+'" data-rule="'+r.规则ID+'">'+
       '<div class="rule-top"><span class="rid">'+r.规则ID+'</span><span class="rname">'+esc(r['一级分类'])+' / '+esc(r['二级分类'])+'</span>'+
       (r['禁忌']?'<span class="warn-dot" title="'+esc(r['禁忌'])+'">禁忌</span>':'')+'</div>'+
       '<div class="rule-goal">'+esc(r['回答目标']||'')+(r['下一步动作']?' → '+esc(r['下一步动作']):'')+'</div></div>'
     ).join(''):'<div class="empty">未命中规则，用通用问需模板</div>')+'</div>'+
-    '<div class="sect">回复草稿（可改，改完再复制）</div>'+
+    '<div class="sect">回复草稿（可直接发，也可以先改）</div>'+
     '<textarea class="ta draft" id="draftInput" rows="9">'+esc(d.text)+'</textarea>'+
     (askHtml())+
     (isNewbie()?'<div class="checks"><div class="chk warn"><span class="dot"></span><b>新人必检：</b>①价格来自当日报价表 ②无成本/毛利字眼 ③让价≤100 ④保修只说两年联保+四年软件 ⑤未拿收货信息别提定金</div></div>':'')+
     '<div class="checks">'+d.checks.map(x=>'<div class="chk '+x.level+'"><span class="dot"></span>'+esc(x.msg)+'</div>').join('')+'</div>'+
-    '<div class="row gap8"><button class="btn primary" id="btnCopy" '+(blocked?'disabled':'')+'>复制（算采纳）</button>'+
-    '<button class="btn" id="btnCopySend" '+(blocked?'disabled':'')+'>复制并标记已发送</button>'+
-    '<button class="btn" id="btnAI">AI 润色</button>'+
+    '<div class="row gap8"><button class="btn primary" id="btnCopy" title="复制到剪贴板，并记为一次采纳" '+(blocked?'disabled':'')+'>复制发给客户</button>'+
+    '<button class="btn" id="btnCopySend" title="复制并记录为已发送，方便回看" '+(blocked?'disabled':'')+'>复制并标记已发送</button>'+
+    '<button class="btn" id="btnAI" title="让 AI 改写语气，不改变价格和事实">AI 润色一下（改语气）</button>'+
     '<button class="btn ghost" id="btnDiscard">丢弃</button></div>'+
-    (d.item?'<div class="pricetag">报价依据：'+esc(d.item.品牌+d.item.型号)+' → '+(d.item.待确认报价?'常规口径 ¥'+d.item.建议卖价+'（待老板确认）':'建议卖价 ¥'+d.item.建议卖价)+'（成本/毛利不对外）</div>':
-      '<div class="pricetag">未匹配到当日报价表机型：报价前先到「报价表」核对</div>');
+    '<div class="hint mt8">「复制发给客户」= 复制到剪贴板并记一次采纳；「复制并标记已发送」= 额外归档到对话记录。</div>'+
+    (d.item?'<div class="pricetag">报价依据（内部看，别发给客户）：'+esc(d.item.品牌+d.item.型号)+' → '+(d.item.待确认报价?'常规口径 ¥'+d.item.建议卖价+'（待老板确认）':'建议卖价 ¥'+d.item.建议卖价)+'</div>':
+      '<div class="pricetag">没在当日报价表里找到这款机型：报价前先在「工具 / 更多 → 报价表」核对，或按待确认报价处理。</div>');
 }
 function wireDraft(){
   $('#btnCopy').onclick=()=>copyDraft(false);
@@ -495,14 +574,17 @@ function renderRight(){
 
   $('#rightBody').innerHTML=
     '<datalist id="modelList">'+modelList+'</datalist>'+
+    '<div class="hint" style="margin-bottom:10px">下面都可以不填；填了草稿会更贴合客户，不填也能直接生成。</div>'+
     '<div class="fld"><label>客户称呼</label><input class="in" id="cName" value="'+esc(c.name)+'"></div>'+
-    '<div class="fld"><label>阶段</label><select class="in" id="cStage">'+
+    '<div class="fld"><label>阶段（客户现在到哪一步了）</label><select class="in" id="cStage">'+
       stages.map(s=>'<option'+(s===(c.stage||'问需')?' selected':'')+'>'+s+'</option>').join('')+'</select></div>'+
-    '<div class="fld"><label>备注（可贴客户原话/家庭情况）</label><textarea class="in" id="cNote" rows="2">'+esc(c.note||'')+'</textarea></div>'+
-    '<div class="sect">关键变量</div>'+fields+
-    '<div class="sect">报价查询 <span class="grow"></span>'+(isNewbie()?'':'<label style="font-size:11px;color:var(--dim);display:flex;gap:4px;align-items:center"><input type="checkbox" id="costChk" '+(DB.settings.showCost?'checked':'')+'>成本</label>')+'</div>'+
-    '<input class="in" id="priceSearch" placeholder="搜型号 / CPU / 显卡 / 价格">'+
-    '<div id="priceResults" style="margin-top:8px"></div>';
+    '<div class="fld"><label>备注（客户原话 / 家庭情况）</label><textarea class="in" id="cNote" rows="2">'+esc(c.note||'')+'</textarea></div>'+
+    '<details class="fold"><summary>关键变量（已了解的信息，可不填）</summary><div class="fold-b">'+fields+'</div></details>'+
+    '<details class="fold"><summary>报价查询（查今天卖多少，不影响草稿）</summary><div class="fold-b">'+
+      '<div class="row" style="margin-bottom:8px">'+(isNewbie()?'':'<label style="font-size:11px;color:var(--dim);display:flex;gap:4px;align-items:center"><input type="checkbox" id="costChk" '+(DB.settings.showCost?'checked':'')+'>显示成本（仅自己看）</label>')+'</div>'+
+      '<input class="in" id="priceSearch" placeholder="搜型号 / CPU / 显卡 / 价格">'+
+      '<div id="priceResults" style="margin-top:8px"></div>'+
+    '</div></details>';
 
   $('#cName').oninput=e=>{c.name=e.target.value;renderCustomers();save();};
   $('#cStage').onchange=e=>{c.stage=e.target.value;renderCustomers();renderOthersSlots();save();};
@@ -890,8 +972,8 @@ async function aiDirect(){
     if(msg){c.history.push({role:'customer',text:msg,ts:Date.now()});c.msgDraft='';}
     DRAFT={text:out,item:item,rule:rules[0]||{规则ID:'AI',一级分类:'AI',二级分类:'直出',禁忌:'',回答目标:'AI生成',下一步动作:''},matched:rules,checks:checkDraft(out,item,msg),original:out,msg:msg};
     renderMid();renderCustomers();save();
-  }catch(e){toast('AI 直出失败：'+e.message,2600);}
-  finally{btn.disabled=false;btn.textContent='AI 直出';}
+  }catch(e){toast('AI 直接写整段失败：'+e.message,2600);}
+  finally{btn.disabled=false;btn.textContent='AI 直接写整段（可选）';}
 }
 
 /* ============ 报价表：上传 / 解析 / 版本 ============ */
@@ -1289,7 +1371,7 @@ function renderStats(){
   const drop=a.filter(x=>x.action==='discard').length;
   const total=adopt+edit+drop;
   const rate=total?Math.round((adopt+edit)/total*100):0;
-  $('#stats').innerHTML='埋点：采纳 '+adopt+' / 修改后采纳 '+edit+' / 丢弃 '+drop+' ｜ 采纳率 <b style="color:#7de3d8">'+rate+'%</b>';
+  $('#stats').innerHTML='使用统计：直接复制 '+adopt+' / 改后复制 '+edit+' / 丢弃 '+drop+' ｜ 采纳率 <b style="color:#7de3d8">'+rate+'%</b>';
 }
 
 /* ============ 初始化 ============ */
@@ -1299,6 +1381,35 @@ if(!DB.settings)DB.settings={showCost:false,llm:{url:'',model:'deepseek-chat',ke
 if(!DB.analytics)DB.analytics=[];
 renderAll();
 initRemote();
+
+/* 工具抽屉：报价更新 / 设置 / 备份都收在这里，主界面只留三步 */
+function openDrawer(){$('#toolDrawer').classList.add('on');$('#drawerBg').classList.add('on');}
+function closeDrawer(){$('#toolDrawer').classList.remove('on');$('#drawerBg').classList.remove('on');}
+$('#btnTools').onclick=openDrawer;
+$('#drawerClose').onclick=closeDrawer;
+$('#drawerBg').onclick=closeDrawer;
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDrawer();});
+$('#btnGuide').onclick=()=>{
+  try{localStorage.removeItem('copilot_guide')}catch(e){}
+  renderMid();
+  const mid=$('#midBody');if(mid)mid.scrollTop=0;
+  toast('已展开三步使用引导');
+};
+document.addEventListener('click',e=>{
+  if(e.target.closest('[data-guide-close]')){
+    try{localStorage.setItem('copilot_guide','off')}catch(e){}
+    renderMid();toast('引导已收起，需要时可点右上角「使用说明」');
+    return;
+  }
+  const demo=e.target.closest('[data-demo]');
+  if(demo){
+    const t=$('#msgInput');if(!t)return;
+    t.value='哥，5000元装台电脑，推荐一下配置呗，不包含显示器';
+    generate();
+    toast('已用示例生成草稿，可直接改字或复制发送');
+  }
+});
+
 $('#custSearch').oninput=renderCustomers;
 $('#btnAddCust').onclick=()=>{
   const name=prompt('客户称呼（如：小王 / 客32）','新客户');
