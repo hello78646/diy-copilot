@@ -900,7 +900,8 @@ function factsOf(msg,c){
   const m=String(msg||'');
   const s=(c&&c.slots)||{};
   const all=[m,String((c&&c.note)||'')].join(' ');
-  const budget=(c&&c.budget)||budgetIn(m)||budgetFromEnum(s.V02)||budgetIn(all);
+  /* 本句说出的预算优先，其次才是之前记下的预算/右栏枚举 */
+  const budget=budgetIn(m)||(c&&c.budget)||budgetFromEnum(s.V02)||budgetIn(all);
   let form='';
   if(/笔记本|轻薄本|游戏本|本子|便携|出门带/i.test(m))form='laptop';
   else if(/台式|主机|装机|组装|整机|itx/i.test(m))form='desk';
@@ -915,7 +916,8 @@ function factsOf(msg,c){
   else if(/设计|剪辑|渲染|ps|pr|修图|建模|cad|三维/i.test(all))use='设计剪辑';
   else if(/直播|推流|obs/i.test(all))use='直播';
   else if(/办公|网课|上课|学习|文档|表格|ppt|写代码|编程|敲代码/i.test(all))use='办公学习';
-  const display=/带显示器|要显示器|含显示器|整套/i.test(all)?'含':(/不要显示器|不含显示器|自己有显示器|不用显示器/i.test(all)?'不含':'');
+  const display=/带显示器|要显示器|含显示器|整套|加显示器|配显示器|带个显示器|带屏/i.test(all)?'含':
+    (/不带|不要显示器|不含显示器|自己有显示器|不用显示器|单主机|只要主机|光主机|已有显示器/i.test(all)?'不含':'');
   const time=/今天|马上|立刻|现在就要|明天/i.test(all)?'立刻':(/这周|本周|月底|下月|这个月/i.test(all)?'本月':'');
   return {budget:budget||0,form:form,game:game,use:use,heavy:heavy,light:light,display:display,time:time,text:all};
 }
@@ -923,14 +925,20 @@ function pickModels(f,item){
   if(item)return [item];
   const v=av();if(!v)return [];
   if(!f.budget)return [];
-  let list=v.items.filter(i=>{
+  const all=v.items.filter(i=>i.建议卖价);
+  let list=all.filter(i=>{
     if(f.form==='desk')return i.分类==='台式整机';
     if(f.form==='laptop')return i.分类!=='台式整机';
     return true;
-  }).filter(i=>i.建议卖价&&i.建议卖价<=f.budget+150);
-  if(!list.length)return [];
+  });
+  /* 兜底：当天报价表里没有对应分类时，别让客户空手走 —— 退回全表再按预算挑 */
+  if(!list.length)list=all.slice();
+  let fit=list.filter(i=>i.建议卖价<=f.budget+150);
+  /* 兜底：预算内一台都挑不出时，取离预算最近的几台，报价时再让老板确认 */
+  if(!fit.length)fit=list.slice().sort((a,b)=>Math.abs(a.建议卖价-f.budget)-Math.abs(b.建议卖价-f.budget)).slice(0,6);
+  if(!fit.length)return [];
   const GPU_TIER={'4090':7,'4080':6,'5070':6,'4070':5,'3080':5,'3070':4,'5060TI':6,'4060TI':5,'5060':5,'4060':4,'3060':3,'4050':3,'3050':2,'1650':1,'6500':2};
-  const scored=list.map(i=>{
+  const scored=fit.map(i=>{
     const gm=String(i.显卡||'').toUpperCase().match(/(\d{4})(TI)?/);
     const hasGpu=!!gm,tier=gm?(GPU_TIER[gm[1]+(gm[2]||'')]||3):0;
     let s=0;
@@ -996,6 +1004,7 @@ function needReply(rule,item,msg,c){
   if(!f.form&&!item)q='台式还是笔记本？定了我按你预算给你挑，不让你多花。';
   else if(!models.length&&!f.budget)q='你预算大概多少？我按预算给你挑，不让你多花。';
   else if(f.form==='desk'&&!f.display)q='要不要带显示器？带的话我给你算整套。';
+  else if(models.length>1&&f.form==='desk')q='打算什么时候入手？这两天定的话，这个价我今天给你保住。';
   else if(models.length>1)q='你更看重屏幕大一点还是轻一点？选好我把实拍图和完整配置单发你。';
   else if(!f.use&&!f.game)q='主要拿来打游戏还是办公/上课？';
   else if(models.length===1)q='这台合适的话我直接给你留，要不要再看下实拍图？';
@@ -1213,7 +1222,9 @@ function extractSlots(msg,c){
   const bv=k?+k[1]*1000:(w?Math.round(+w[1]*10000):(r?+r[1]:0));
   if(bv>=1000&&bv<=30000){
     c.budget=bv;
-    if(!c.slots.V02){c.slots.V02=budgetEnum(bv);n++;}
+    /* 客户改口提预算/降预算时，右栏枚举要跟着本句更新，否则面板还停在旧区间 */
+    const en=budgetEnum(bv);
+    if(c.slots.V02!==en){c.slots.V02=en;n++;}
   }
   if(!c.slots.V01){
     if(/笔记本|轻薄本|游戏本|本子|便携|出门带/i.test(m)){c.slots.V01='笔记本';n++;}
@@ -1227,8 +1238,8 @@ function extractSlots(msg,c){
     else if(/办公|网课|上课|学习|文档|表格|ppt|编程|写代码/i.test(m)){c.slots.V03='办公学习';n++;}
   }
   if(!c.slots.V04){
-    if(/带显示器|要显示器|含显示器|整套/i.test(m)){c.slots.V04='含';n++;}
-    else if(/不要显示器|不含显示器|自己有显示器|不用显示器/i.test(m)){c.slots.V04='不含';n++;}
+    if(/带显示器|要显示器|含显示器|整套|加显示器|配显示器|带个显示器|带屏/i.test(m)){c.slots.V04='含';n++;}
+    else if(/不带|不要显示器|不含显示器|自己有显示器|不用显示器|单主机|只要主机|光主机/i.test(m)){c.slots.V04='不含';n++;}
   }
   if(!c.slots.V05){
     if(/今天|马上|立刻|现在就要|明天/i.test(m)){c.slots.V05='立刻';n++;}
