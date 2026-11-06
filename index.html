@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>DIY电脑销售 Copilot</title>
+<title>销售聊天中台 · Sales Copilot</title>
 <style>
 :root{
   --bg:#0b0e14;--panel:#141a24;--panel2:#1b2431;--line:#26303f;
@@ -205,17 +205,162 @@ button,input,select,textarea{font-family:inherit;font-size:14px}
   .pane{min-height:320px}
   .warnline{display:none}
 }
+
+/* ===== 销售聊天中台：浅色对话界面 ===== */
+:root{
+  --bg:#f4f6f9;--panel:#ffffff;--panel2:#f7f9fb;--line:#e5e9f0;
+  --txt:#1f2733;--sub:#6b7787;--dim:#98a2b3;
+  --teal:#0e9f8a;--cyan:#2f6fe0;--amber:#b45309;--rose:#c23b52;--violet:#5b57c9;--green:#139f6b;
+}
+body{background:#f4f6f9;color:var(--txt);font-size:13px}
+.top{background:#fff;border-bottom:1px solid var(--line);box-shadow:none;padding:9px 16px}
+.logo{color:#111827}
+.logo .mark{width:24px;height:24px}
+.logo small{color:#98a2b3}
+.chip{background:#f2f5f9;border-color:#e2e7ee;color:#3c4859}
+.chip.bad{background:#fdf0f2;border-color:#f6ccd3;color:#b3364a}
+.warnline{color:#8a6a1f}
+.btn{background:#fff;border-color:#dfe5ec;color:#2c3644;box-shadow:none}
+.btn:hover{border-color:#c8d2de;transform:none}
+.btn:active{transform:none}
+.btn.primary{background:#111827;border-color:#111827;color:#fff;box-shadow:none}
+.btn.primary:hover{filter:brightness(1.15)}
+.btn.ghost{color:#6b7787;background:transparent;box-shadow:none}
+.mini{background:#fff;border-color:#e2e7ee;color:#6b7787}
+.pane{background:#fff;border-color:var(--line);box-shadow:none;border-radius:12px}
+.pane-h{border-color:var(--line);color:#475467}
+.search,.ta,.in{background:#fff;border-color:#e2e7ee;color:var(--txt)}
+.search:focus,.ta:focus,.in:focus{border-color:#9fb0c7;box-shadow:none}
+.ta.draft{background:#fff;border-color:#e2e7ee}
+.sect{color:#8d98a7}
+.empty{color:#98a2b3;border-color:#e8ebf0}
+.cust{background:#fff;border-color:#eef1f5}
+.cust:hover{background:#f8fafc;border-color:#e2e7ee}
+.cust.on{background:#f1f6ff;border-color:#cddffb;box-shadow:none}
+.ava{background:#eef4ff;color:#2f6fe0}
+.cust .nm{color:#1f2733}
+.cust .sb{color:#8d98a7}
+.cust .st{background:#eef8f3;color:#0f7a56;border-color:#d3eede}
+.rule{background:#fff;border-color:#e8ebf0}
+.rule:hover{border-color:#d6dee8}
+.rule.on{background:#f2fbf8;border-color:#bfe6da}
+.rid{color:#0e7a66;background:#eafaf5;border-color:#bfe6da}
+.rname{color:#344054}
+.warn-dot{color:#8a5a00;background:#fff6e5;border-color:#f0d9a8}
+.ask{background:#fffaf0;border-color:#f0dfb6;color:#7a5200}
+.ask:hover{background:#fff5e2;border-color:#e3c98b}
+.chk.ok{color:#0f7a56;background:#effaf4;border-color:#d4f0e2}
+.chk.warn{color:#8a5a00;background:#fff8e8;border-color:#fae7be}
+.chk.block{color:#b3364a;background:#fdf0f2;border-color:#f6ccd3}
+.fold{border-color:#e5e9f0;background:#fff}
+.fold summary{color:#475467}
+.fold summary:before{color:#98a2b3}
+.hitem{background:#f8fafc;border-color:#e8ebf0}
+.hitem.customer{border-left-color:#98a2b3}
+.hitem.sales{border-left-color:#139f6b}
+.ht,.muted,.hint,.pricetag,.cust-sub,.pc-spec{color:#98a2b3}
+.price-card{background:#fff;border-color:#e8ebf0}
+.price-card:hover{border-color:#cddffb}
+.pc-top{color:#1f2733}
+.pc-price{color:#0e7a66}
+.role-tag{border-color:#d3eede;background:#eef8f3;color:#0f7a56}
+.role-tag.me{border-color:#d6e4fb;background:#f1f6ff;color:#2f6fe0}
+.toast{background:#111827;border-color:#111827;color:#fff}
+.modal{background:rgba(17,24,39,.35)}
+.mbox{background:#fff;border-color:#e5e9f0;box-shadow:0 24px 60px rgba(16,24,40,.18)}
+.mh{border-color:var(--line);color:#1f2733}
+.mf{border-color:var(--line)}
+.x{color:#98a2b3}
+.tbl th{background:#f7f9fb;color:#667085}
+.tbl td{border-color:#eef1f5}
+.tbl input{background:#fff;border-color:#e2e7ee;color:var(--txt)}
+.vrow{background:#f8fafc;border-color:#e8ebf0}
+.vrow .on-tag{color:#0f7a56;border-color:#d3eede;background:#eef8f3}
+.drawer{background:#fff;border-left-color:#e5e9f0;box-shadow:-14px 0 36px rgba(16,24,40,.12)}
+.drawer-bg{background:rgba(17,24,39,.3)}
+.drawer-h{color:#1f2733}
+
+/* 布局：左客户 / 中对话 / 右资料 */
+.shell{grid-template-columns:264px 1fr 296px;gap:10px;padding:10px}
+.pane.chat{padding:0;overflow:hidden}
+#midBody{padding:0;display:flex;flex-direction:column;height:100%;overflow:hidden}
+.side{overflow:hidden}
+.side-brand{padding:12px 14px 10px;border-bottom:1px solid var(--line)}
+.side-logo{display:flex;align-items:center;gap:8px;font-weight:700;font-size:13px;color:#1f2733}
+.side-logo .mark{width:18px;height:18px;border-radius:6px;background:linear-gradient(135deg,#2dd4bf,#38bdf8 45%,#a78bfa)}
+.side-name{font-size:11px;color:#98a2b3;margin-top:3px;letter-spacing:.4px}
+.side-tools{padding:10px 12px;border-bottom:1px solid var(--line);display:grid;gap:7px}
+.side-tools .in{padding:6px 9px;font-size:12px}
+.btn.dark{background:#141a24;border-color:#141a24;color:#fff;font-weight:600}
+.btn.dark:hover{filter:brightness(1.12)}
+.cust-list{flex:1;min-height:0;overflow:auto;padding:8px 10px}
+.cust{display:block;padding:9px 10px;margin-bottom:6px}
+.cust-top{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600}
+.cust .sb{margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px}
+.cust-foot{display:flex;align-items:center;gap:8px;margin-top:6px;font-size:10px;color:#98a2b3}
+.cust .tag{background:#f2f5f9;border:1px solid #e5e9f0;color:#667085;padding:1px 6px;border-radius:5px}
+.cust .tag.done{background:#eef8f3;border-color:#d3eede;color:#0f7a56}
+.cust-foot .del{opacity:0;transition:.15s;border:0;background:none;color:#c23b52;font-size:10px;cursor:pointer}
+.cust:hover .cust-foot .del{opacity:1}
+.side-foot{padding:8px 12px;border-top:1px solid var(--line);text-align:center}
+.link{border:0;background:none;color:#667085;font-size:11px;cursor:pointer;padding:0;font-family:inherit}
+.link:hover{color:#111827;text-decoration:underline}
+.link.danger{color:#c23b52}
+.link:disabled{color:#c3cbd6;cursor:not-allowed;text-decoration:none}
+
+/* 对话流 */
+.chat-head{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--line);background:#fff}
+.chat-title b{font-size:15px;color:#1f2733}
+.chat-sub{display:block;font-size:11px;color:#98a2b3;margin-top:2px}
+.status-chip{font-size:11px;padding:3px 9px;border-radius:6px;background:#f2f5f9;color:#667085;border:1px solid #e5e9f0}
+.status-chip.done{background:#eef8f3;color:#0f7a56;border-color:#d3eede}
+.chat-scroll{flex:1;min-height:0;overflow:auto;padding:18px 18px 8px;background:#f7f8fa}
+.chat-empty{color:#98a2b3;text-align:center;padding:64px 10px;font-size:12px}
+.msg{display:flex;margin-bottom:14px}
+.msg.customer{justify-content:flex-end}
+.msg.agent{justify-content:flex-start}
+.bubble{max-width:76%;padding:9px 12px;border-radius:10px;background:#fff;border:1px solid #e8ebf0;
+  box-shadow:0 1px 1px rgba(16,24,40,.03);font-size:13px;line-height:1.7;word-break:break-word}
+.msg.customer .bubble{background:#141a24;border-color:#141a24;color:#fff}
+.bubble .t{white-space:pre-wrap}
+.bubble-edit{width:100%;border:0;outline:0;resize:none;background:transparent;font:inherit;color:inherit;
+  line-height:1.7;min-height:22px;padding:0;overflow:hidden;display:block}
+.bubble-warn{margin-top:8px;font-size:11px;color:#b3364a;background:#fdf0f2;border:1px solid #f6ccd3;
+  border-radius:6px;padding:4px 7px;line-height:1.5}
+.bubble-meta{display:flex;align-items:center;gap:10px;margin-top:6px;font-size:11px;color:#98a2b3;flex-wrap:wrap}
+.msg.customer .bubble-meta{justify-content:flex-end}
+.bubble-meta .grow{flex:1}
+.bubble .fold.more{margin-top:8px;padding:0;border:0;background:transparent}
+.bubble .fold.more summary{font-size:11px;color:#8d98a7}
+.bubble .fold.more .fold-b{padding-top:8px;border-top:1px dashed #eef1f5;margin-top:6px}
+.chat-foot{display:flex;gap:8px;align-items:flex-end;padding:10px 12px;border-top:1px solid var(--line);background:#fff}
+.chat-foot textarea{flex:1;border:1px solid #e2e7ee;border-radius:8px;padding:8px 10px;font:inherit;font-size:13px;
+  resize:none;outline:none;max-height:92px;min-height:36px;line-height:1.55;color:var(--txt)}
+.chat-foot textarea:focus{border-color:#9fb0c7}
+.send-btn{height:36px;padding:0 20px;border:0;border-radius:8px;background:#141a24;color:#fff;font-weight:600;cursor:pointer;flex:none}
+.send-btn:hover{filter:brightness(1.12)}
+.send-btn:disabled{opacity:.5;cursor:not-allowed}
+
+/* 右侧客户信息 */
+#rightBody{padding:4px 14px 14px}
+.info-row{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid #eff2f6;font-size:12px}
+.info-row .k{color:#8d98a7;flex:none;min-width:82px}
+.info-row .vwrap{flex:1;min-width:0;text-align:right}
+.info-row input,.info-row select{width:100%;border:0;background:transparent;text-align:right;font:inherit;
+  font-size:12px;font-weight:600;color:#1f2733;outline:none;padding:0}
+.info-row input::placeholder{color:#a9b3c1;font-weight:500}
+.info-row select.ph{color:#a9b3c1;font-weight:500}
+.info-hint{padding:8px 0 2px;font-size:11px;color:#a9b3c1}
 </style>
 </head>
 <body>
 
 <div class="top">
-  <div class="logo"><span class="mark"></span>DIY电脑销售 Copilot <small>三步出话术 · 报价校验（公开静态版）</small></div>
+  <div class="logo"><span class="mark"></span>Sales Copilot <small>销售聊天中台（公开静态版）</small></div>
   <div class="grow"></div>
   <span class="warnline">出货前请与老板确认最终价</span>
   <span id="verChip" class="chip"><span class="dot"></span>报价表</span>
   <span id="aiChip" class="chip"><span class="dot"></span>AI</span>
-  <button class="btn ghost" id="btnGuide" title="重新展开三步使用引导">使用说明</button>
   <button class="btn primary" id="btnTools" title="更新报价、设置、备份都在这里">工具 / 更多</button>
 </div>
 
@@ -223,33 +368,42 @@ button,input,select,textarea{font-family:inherit;font-size:14px}
 <div class="drawer" id="toolDrawer">
   <div class="drawer-h">工具与数据 <span class="grow"></span><button class="x" id="drawerClose" title="关闭">×</button></div>
   <div class="drawer-b">
-    <div class="hint">日常销售只用中间三步；这里是更新报价、设置和备份。</div>
+    <div class="hint">日常销售就在中间对话框里回客户；这里是更新报价、AI 与备份。</div>
     <button class="btn primary wide" id="btnQuickPrice">上传今日报价表（选文件）</button>
     <div class="hint">每天把微信群里的报价文件传进来，当天生效；也可以点下面「报价表」直接粘贴原文。</div>
     <input type="file" id="quickPriceFile" accept=".csv,.tsv,.txt,.xlsx,.json" style="display:none">
     <button class="btn wide" id="btnPrice">报价表 / 版本管理</button>
     <div class="hint">粘贴微信报价原文 → 解析 → 核对 → 保存并生效；可切换历史版本。</div>
+    <button class="btn wide" id="btnAIDirect">AI 直接写一条回复（可选）</button>
+    <div class="hint">按最后一条客户消息，让 AI 写整段；需先在设置里配置 Key，不配也能用规则回复。</div>
     <button class="btn wide" id="btnSettings">设置（AI / 新人模式 / 备份）</button>
     <div class="hint">配置 AI Key、隐藏成本、开启新人模式、导出备份。</div>
   </div>
 </div>
 
 <div class="shell">
-  <aside class="pane">
-    <div class="pane-h">客户（可选）<span class="grow"></span><button class="mini" id="btnAddCust">+ 新建</button></div>
-    <div class="pane-b">
-      <div class="hint" style="margin-bottom:8px">不选客户也能直接生成；选中后对话会归档到该客户。</div>
-      <input class="search" id="custSearch" placeholder="搜索客户 / 机型 / 备注">
-      <div id="custList" style="margin-top:10px"></div>
+  <aside class="pane side">
+    <div class="side-brand">
+      <div class="side-logo"><span class="mark"></span>Sales Copilot</div>
+      <div class="side-name">销售聊天中台</div>
     </div>
+    <div class="side-tools">
+      <select class="in" id="typeFilter">
+        <option>全部</option><option>台式</option><option>笔记本</option><option>二手</option>
+      </select>
+      <input class="in" id="custSearch" placeholder="输入客户名称">
+      <button class="btn dark wide" id="btnAddCust">+ 新建客户</button>
+    </div>
+    <div class="cust-list" id="custList"></div>
+    <div class="side-foot"><button class="link" data-demo="1">查看演示数据</button></div>
   </aside>
 
-  <section class="pane">
+  <section class="pane chat">
     <div class="pane-b" id="midBody"></div>
   </section>
 
   <aside class="pane">
-    <div class="pane-h">客户资料与报价查询（可选）<span class="grow"></span><span style="font-size:11px;color:var(--dim)">不填也能生成</span></div>
+    <div class="pane-h">客户信息<span class="grow"></span><span style="font-size:11px;color:var(--dim)">未填为待确认</span></div>
     <div class="pane-b" id="rightBody"></div>
   </aside>
 </div>
@@ -434,106 +588,140 @@ function renderAIChip(){
 }
 
 /* ============ 渲染：客户列表 ============ */
+function inferType(c){
+  const t=(c.slots&&c.slots.V01)||'';
+  if(t)return t;
+  const hay=[c.note||'',(c.history||[]).map(x=>x.text).join(' ')].join(' ');
+  if(/台式|主机|装机|组装|DIY/i.test(hay))return '台式';
+  if(/笔记本|轻薄|游戏本/i.test(hay))return '笔记本';
+  return '';
+}
+function lastTs(c){const h=c.history||[];return h.length?h[h.length-1].ts:0;}
 function renderCustomers(){
   const q=($('#custSearch').value||'').trim().toLowerCase();
+  const tf=($('#typeFilter')&&$('#typeFilter').value)||'全部';
   const list=DB.customers.filter(c=>{
+    if(tf!=='全部'&&inferType(c)!==tf)return false;
     if(!q)return true;
-    const hay=[c.name,c.note,c.slots.V01,c.slots.V02,c.stage].join(' ').toLowerCase();
+    const hay=[c.name,c.note,c.slots.V01,c.slots.V02,c.stage,(c.history||[]).map(x=>x.text).join(' ')].join(' ').toLowerCase();
     return hay.includes(q);
   });
   $('#custList').innerHTML=list.map(c=>{
-    const last=(c.history[c.history.length-1]||{}).text||'暂无对话';
+    const last=(c.history[c.history.length-1]||{}).text||'暂无聊天记录';
+    const t=inferType(c)||'待确认';
+    const done=/成交|履约/.test(c.stage||'');
     return '<div class="cust '+(c.id===DB.activeCustomer?'on':'')+'" data-cust-id="'+c.id+'">'+
-      '<div class="ava">'+esc((c.name||'客').slice(0,1))+'</div>'+
-      '<div style="min-width:0;flex:1"><div class="nm">'+esc(c.name)+'</div>'+
-      '<div class="sb">'+esc(c.slots.V01?c.slots.V01+' · ':'')+esc(last)+'</div></div>'+
-      '<span class="st">'+esc(c.stage||'问需')+'</span></div>';
+      '<div class="cust-top">'+esc(c.name||'新客户')+(done?'<span class="tag done">已结算</span>':'')+'</div>'+
+      '<div class="sb">'+esc(last)+'</div>'+
+      '<div class="cust-foot"><span class="tag">'+esc(t)+'</span><span>'+esc(c.stage||'问需')+'</span>'+
+      '<span class="grow" style="flex:1"></span>'+
+      '<span>'+(lastTs(c)?fmtTime(lastTs(c)).slice(6):'')+'</span>'+
+      '<button class="del" data-del="'+c.id+'" title="删除客户">删除</button></div></div>';
   }).join('')||'<div class="empty">没有匹配的客户</div>';
   $$('#custList .cust').forEach(el=>el.onclick=()=>{
     if(el.dataset.custId===DB.activeCustomer)return;
     DB.activeCustomer=el.dataset.custId;DRAFT=null;renderCustomers();renderMid();renderRight();save();
   });
+  $$('#custList [data-del]').forEach(b=>b.onclick=e=>{
+    e.stopPropagation();
+    const id=b.dataset.del;
+    if(DB.customers.length<=1){toast('至少保留一个客户');return;}
+    if(!confirm('删除这个客户和它的聊天记录？'))return;
+    DB.customers=DB.customers.filter(c=>c.id!==id);
+    if(DB.activeCustomer===id)DB.activeCustomer=DB.customers[0].id;
+    DRAFT=null;renderAll();toast('已删除');
+  });
 }
 
 /* ============ 新手引导 ============ */
 function guideOff(){try{return localStorage.getItem('copilot_guide')==='off'}catch(e){return false}}
-function guideHtml(){
-  if(guideOff())return '';
-  return '<div class="guide">'+
-    '<div class="guide-f" style="margin-top:0">'+
-      '<b style="color:#bff3ea;font-size:13px">客户说 → 销售代理写 → 你复制发：</b>'+
-      '<span class="hint" style="color:#dbe8f7">① 粘贴客户原话 → ② 生成代理回复 → ③ 检查后复制发送</span>'+
-      '<span class="grow"></span>'+
-      '<button class="btn primary" data-demo="1">用示例试试</button>'+
-      '<button class="mini" data-guide-close="1">收起</button>'+
-    '</div>'+
-  '</div>';
-}
-function emptyGuideHtml(){
-  return '<div class="empty-guide"><b>还没有代理回复</b>'+
-    '<span class="hint">把客户的话粘到上面，再点「让销售代理写回复」；第一次用可以直接点下面按钮。</span>'+
-    '<div style="margin-top:10px"><button class="btn primary" data-demo="1">用示例试试</button></div></div>';
-}
 
-/* ============ 渲染：中栏 ============ */
-function renderMid(){
-  const c=ac();
-  const box=$('#midBody');
-  const h=c.history||[];
-  box.innerHTML=
-    guideHtml()+
-    '<div class="mid-head"><div><div class="cust-name">'+esc(c.name)+'</div>'+
-    '<div class="cust-sub">'+esc(c.slots.V01||'未填机型')+' · '+esc(c.slots.V02||'预算未知')+' · '+esc(c.slots.V05||'入手时间未知')+(c.state&&c.state.next?' · 下一步：'+esc(c.state.next):'')+'</div></div>'+
-    '<span class="grow"></span><span class="chip">'+esc(c.stage||'问需')+'</span></div>'+
-    '<div class="role-row"><span class="role-tag">客户说</span><span class="role-hint">把客户在微信里发的话粘到下面，不用整理</span></div>'+
-    '<textarea class="ta" id="msgInput" rows="3" placeholder="例：哥，5000元装台电脑，推荐一下配置呗，不包含显示器">'+esc(c.msgDraft||'')+'</textarea>'+
-    '<div class="row gap8 mt8"><button class="btn primary" id="btnGen" title="按公司规则 + 当日报价写一段可直接发给客户的回复">让销售代理写回复</button>'+
-    '<button class="btn" id="btnAIDirect" title="让 AI 直接写一整段回复；需先在「工具 / 更多 → 设置」配置 Key">AI 直接写整段（可选）</button>'+
-    '<button class="btn ghost" id="btnClrMsg">清空</button></div>'+
-    (DRAFT?draftHtml():emptyGuideHtml())+
-    (h.length?'<details class="fold"><summary>历史对话（'+h.length+' 条）</summary><div class="fold-b">'+
-      '<div class="row" style="margin-bottom:6px"><span class="grow"></span><button class="mini" id="btnClrHis">清空记录</button></div>'+
-      '<div class="history">'+h.map(x=>
-      '<div class="hitem '+x.role+'"><div class="ht">'+(x.role==='customer'?'客户':'我方')+' · '+fmtTime(x.ts)+'</div>'+
-      '<div class="hx">'+esc(x.text)+'</div></div>').join('')+'</div></div></details>':'');
-
-  const msg=$('#msgInput');
-  msg.oninput=()=>{c.msgDraft=msg.value;};
-  $('#btnGen').onclick=generate;
-  $('#btnAIDirect').onclick=aiDirect;
-  $('#btnClrMsg').onclick=()=>{c.msgDraft='';msg.value='';msg.focus();save();};
-  const hb=$('#btnClrHis');
-  if(hb) hb.onclick=()=>{if(confirm('清空该客户对话记录？')){c.history=[];renderMid();save();}};
-  if(DRAFT) wireDraft();
+/* ============ 渲染：中栏（对话流） ============ */
+function autoGrow(el){
+  if(!el)return;
+  el.style.height='auto';
+  el.style.height=Math.min(el.scrollHeight,92)+'px';
 }
-
-function draftHtml(){
+function messagesHtml(h){
+  return h.map((x,i)=>{
+    const agent=x.role==='sales';
+    return '<div class="msg '+(agent?'agent':'customer')+'"><div class="bubble">'+
+      '<div class="t">'+esc(x.text)+'</div>'+
+      '<div class="bubble-meta"><span>'+fmtTime(x.ts)+'</span>'+
+      (agent?'<button class="link" data-copy-i="'+i+'">复制</button><span>已发送</span>':'')+
+      '</div></div></div>';
+  }).join('');
+}
+function draftBubbleHtml(){
   const d=DRAFT;
   const blocked=d.checks.some(x=>x.level==='block');
-  return '<div class="role-row"><span class="role-tag me">销售代理（你）</span>'+
-    '<span class="role-hint">这段可直接发给客户，发出前可先改</span><span class="grow"></span>'+
-    (blocked?'<span class="chip" style="border-color:#7f1d1d;color:#fca5a5">有红线，先处理</span>':'<span class="chip">可发送</span>')+'</div>'+
-    '<textarea class="ta draft" id="draftInput" rows="7">'+esc(d.text)+'</textarea>'+
-    (askHtml())+
-    (isNewbie()?'<div class="checks"><div class="chk warn"><span class="dot"></span><b>新人必检：</b>①价格来自当日报价表 ②无成本/毛利字眼 ③让价≤100 ④保修只说两年联保+四年软件 ⑤未拿收货信息别提定金</div></div>':'')+
-    '<div class="checks">'+d.checks.map(x=>'<div class="chk '+x.level+'"><span class="dot"></span>'+esc(x.msg)+'</div>').join('')+'</div>'+
-    '<div class="row gap8"><button class="btn primary" id="btnCopy" title="复制到剪贴板，并记为一次采纳" '+(blocked?'disabled':'')+'>复制发给客户</button>'+
-    '<button class="btn" id="btnCopySend" title="复制并记录为已发送，方便回看" '+(blocked?'disabled':'')+'>复制并标记已发送</button>'+
-    '<button class="btn" id="btnAI" title="让 AI 改写语气，不改变价格和事实">AI 润色一下（改语气）</button>'+
-    '<button class="btn ghost" id="btnDiscard">丢弃</button></div>'+
-    '<div class="hint mt8">「复制发给客户」= 复制并记一次采纳；「复制并标记已发送」= 额外归档到历史对话。</div>'+
-    (d.item?'<div class="pricetag">报价依据（内部看，别发给客户）：'+esc(d.item.品牌+d.item.型号)+' → '+(d.item.待确认报价?'常规口径 ¥'+d.item.建议卖价+'（待老板确认）':'建议卖价 ¥'+d.item.建议卖价)+'</div>':
-      '<div class="pricetag">没在当日报价表里找到这款机型：报价前先在「工具 / 更多 → 报价表」核对，或按待确认报价处理。</div>')+
-    '<details class="fold"><summary>参考话术（'+d.matched.length+' 条，点一条可换说法）</summary><div class="fold-b"><div class="rules">'+
-      (d.matched.length?d.matched.map((r,i)=>
-        '<div class="rule '+(r.规则ID===d.rule.规则ID?'on':'')+'" data-rule="'+r.规则ID+'">'+
-        '<div class="rule-top"><span class="rid">'+r.规则ID+'</span><span class="rname">'+esc(r['一级分类'])+' / '+esc(r['二级分类'])+'</span>'+
-        (r['禁忌']?'<span class="warn-dot" title="'+esc(r['禁忌'])+'">禁忌</span>':'')+'</div>'+
-        '<div class="rule-goal">'+esc(r['回答目标']||'')+(r['下一步动作']?' → '+esc(r['下一步动作']):'')+'</div></div>'
-      ).join(''):'<div class="empty">未命中规则，用通用问需模板</div>')+
-    '</div></div></details>';
+  const bad=d.checks.filter(x=>x.level!=='ok');
+  return '<div class="msg agent"><div class="bubble">'+
+    '<textarea class="bubble-edit" id="draftInput" rows="1">'+esc(d.text)+'</textarea>'+
+    (bad.length?'<div class="bubble-warn">'+(blocked?'⛔ 先处理：':'⚠ 注意：')+esc(bad[0].msg)+
+      (bad.length>1?'（共 '+bad.length+' 项，见下方检查）':'')+'</div>':'')+
+    '<div class="bubble-meta"><span>刚刚</span>'+
+      '<button class="link" id="btnCopy" '+(blocked?'disabled':'')+'>复制</button>'+
+      '<button class="link" id="btnCopySend" '+(blocked?'disabled':'')+'>标记已发送</button>'+
+      '<span class="grow"></span>'+
+      '<button class="link" id="btnAI">AI 润色</button>'+
+      '<button class="link danger" id="btnDiscard">丢弃</button></div>'+
+    '<details class="fold more"><summary>检查 / 追问 / 参考话术'+(d.matched.length?'（'+d.matched.length+'）':'')+'</summary><div class="fold-b">'+
+      '<div class="checks">'+d.checks.map(x=>'<div class="chk '+x.level+'"><span class="dot"></span>'+esc(x.msg)+'</div>').join('')+'</div>'+
+      (isNewbie()?'<div class="chk warn" style="margin-bottom:8px"><span class="dot"></span><b>新人必检：</b>①价格来自当日报价表 ②无成本/毛利字眼 ③让价≤100 ④保修口径 ⑤未拿收货信息别提定金</div>':'')+
+      askHtml()+
+      '<div class="sect">参考话术（点一条可换说法）</div><div class="rules">'+
+        (d.matched.length?d.matched.map(r=>
+          '<div class="rule '+(r.规则ID===d.rule.规则ID?'on':'')+'" data-rule="'+r.规则ID+'">'+
+          '<div class="rule-top"><span class="rid">'+r.规则ID+'</span><span class="rname">'+esc(r['一级分类'])+' / '+esc(r['二级分类'])+'</span>'+
+          (r['禁忌']?'<span class="warn-dot" title="'+esc(r['禁忌'])+'">禁忌</span>':'')+'</div>'+
+          '<div class="rule-goal">'+esc(r['回答目标']||'')+(r['下一步动作']?' → '+esc(r['下一步动作']):'')+'</div></div>'
+        ).join(''):'<div class="empty">未命中规则，用通用问需模板</div>')+
+      '</div>'+
+      '<div class="pricetag">'+(d.item?'报价依据（内部看，别发给客户）：'+esc(d.item.品牌+d.item.型号)+' → '+
+        (d.item.待确认报价?'常规口径 ¥'+d.item.建议卖价+'（待老板确认）':'建议卖价 ¥'+d.item.建议卖价):
+        '没在当日报价表里找到这款机型：报价前先到「工具 / 更多 → 报价表」核对，或按待确认报价处理')+'</div>'+
+    '</div></details>'+
+  '</div></div>';
 }
+function renderMid(){
+  const c=ac();
+  const h=c.history||[];
+  const box=$('#midBody');
+  const t=inferType(c)||'待确认';
+  const done=/成交|履约/.test(c.stage||'');
+  box.innerHTML=
+    '<div class="chat-head"><div class="chat-title"><b>'+esc(c.name||'新客户')+'</b>'+
+      '<span class="chat-sub">'+esc(t)+' / '+esc(c.stage||'问需')+' / '+esc((c.state&&c.state.next)||'待跟进')+'</span></div>'+
+      '<span class="grow"></span>'+
+      '<span class="status-chip'+(done?' done':'')+'">'+(done?'已结算':'待跟进')+'</span>'+
+      '<button class="link" id="btnClrHis" title="清空这个客户的聊天记录">清空</button></div>'+
+    '<div class="chat-scroll" id="chatScroll">'+
+      ((h.length||DRAFT)?(messagesHtml(h)+(DRAFT?draftBubbleHtml():''))
+        :'<div class="chat-empty">还没有聊天记录，可以先发送第一条客户消息。</div>')+
+    '</div>'+
+    '<div class="chat-foot">'+
+      '<textarea id="msgInput" rows="1" placeholder="输入客户消息...">'+esc(c.msgDraft||'')+'</textarea>'+
+      '<button class="send-btn" id="btnSend">发送</button></div>';
+
+  const msg=$('#msgInput');
+  msg.oninput=()=>{c.msgDraft=msg.value;autoGrow(msg);};
+  msg.onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();generate();}};
+  autoGrow(msg);
+  $('#btnSend').onclick=generate;
+  const hb=$('#btnClrHis');
+  if(hb) hb.onclick=()=>{if(confirm('清空该客户的聊天记录？')){c.history=[];DRAFT=null;renderMid();renderCustomers();save();}};
+  $$('#chatScroll [data-copy-i]').forEach(b=>b.onclick=()=>copyText(h[+b.dataset.copyI].text));
+  if(DRAFT) wireDraft();
+  const sc=$('#chatScroll');if(sc)sc.scrollTop=sc.scrollHeight;
+}
+
 function wireDraft(){
+  const di=$('#draftInput');
+  if(di){
+    autoGrow(di);
+    di.oninput=()=>{DRAFT.text=di.value;autoGrow(di);};
+  }
   $('#btnCopy').onclick=()=>copyDraft(false);
   $('#btnCopySend').onclick=()=>copyDraft(true);
   $('#btnAI').onclick=aiPolish;
@@ -549,54 +737,54 @@ function wireDraft(){
     const ta=$('#draftInput');if(!ta)return;
     if(ta.value.includes(a.q)){toast('这条已经加过了');return;}
     ta.value=(ta.value.trim()+'\n'+a.q).trim();
-    DRAFT.text=ta.value;
+    DRAFT.text=ta.value;autoGrow(ta);
     logAct('ask_'+a.k);
     ta.focus();ta.scrollTop=ta.scrollHeight;
     toast('已追加追问：'+a.label);
   });
 }
 
-/* ============ 渲染：右栏 ============ */
+/* ============ 渲染：右栏（客户信息） ============ */
 function renderRight(){
   const c=ac();
   const v=av();
-  const modelList=v?v.items.map(i=>'<option value="'+esc(i.型号)+'">'+esc(i.品牌+' '+i.型号)+'</option>').join(''):'';
   const stages=['问需','报价','异议处理','逼单','成交','跟进','履约'];
-  const fields=(DB.variables||[]).map(vr=>{
-    const key=vr['变量ID'],val=c.slots[key]||'';
-    const raw=String(vr['枚举取值']||'');
-    const list=raw.split('/').map(s=>s.trim()).filter(Boolean);
-    let input;
-    if(key==='V01'){
-      input='<input class="in" data-slot="V01" list="modelList" value="'+esc(val)+'" placeholder="如 无界15X / 蛟龙16Pro">';
-    }else if(list.length>=2&&list.length<=8&&raw.length<42){
-      input='<select class="in" data-slot="'+key+'">'+[''].concat(list).map(o=>'<option value="'+esc(o)+'"'+(o===val?' selected':'')+'>'+esc(o)+'</option>').join('')+'</select>';
-    }else{
-      input='<input class="in" data-slot="'+key+'" value="'+esc(val)+'">';
-    }
-    return '<div class="fld"><label title="'+esc(vr['采集话术（原文）']||'')+'">'+esc(vr['变量名'])+'</label>'+input+'</div>';
-  }).join('');
-
+  const en=id=>{const vr=(DB.variables||[]).find(x=>x['变量ID']===id);
+    return String((vr&&vr['枚举取值'])||'').split('/').map(s=>s.trim()).filter(Boolean);};
+  const rowSel=(label,id)=>{
+    const val=c.slots[id]||'';
+    return '<div class="info-row"><span class="k">'+label+'</span><span class="vwrap">'+
+      '<select class="v'+(val?'':' ph')+'" data-slot="'+id+'"><option value="">待确认</option>'+
+      en(id).map(o=>'<option'+(o===val?' selected':'')+'>'+esc(o)+'</option>').join('')+
+      '</select></span></div>';
+  };
   $('#rightBody').innerHTML=
-    '<datalist id="modelList">'+modelList+'</datalist>'+
-    '<div class="hint" style="margin-bottom:10px">下面都可以不填；填了草稿会更贴合客户，不填也能直接生成。</div>'+
-    '<div class="fld"><label>客户称呼</label><input class="in" id="cName" value="'+esc(c.name)+'"></div>'+
-    '<div class="fld"><label>阶段（客户现在到哪一步了）</label><select class="in" id="cStage">'+
-      stages.map(s=>'<option'+(s===(c.stage||'问需')?' selected':'')+'>'+s+'</option>').join('')+'</select></div>'+
-    '<div class="fld"><label>备注（客户原话 / 家庭情况）</label><textarea class="in" id="cNote" rows="2">'+esc(c.note||'')+'</textarea></div>'+
-    '<details class="fold"><summary>关键变量（已了解的信息，可不填）</summary><div class="fold-b">'+fields+'</div></details>'+
-    '<details class="fold"><summary>报价查询（查今天卖多少，不影响草稿）</summary><div class="fold-b">'+
+    '<div class="info-row"><span class="k">客户姓名</span><span class="vwrap">'+
+      '<input id="cName" value="'+esc(c.name||'')+'" placeholder="待确认"></span></div>'+
+    rowSel('客户类型','V01')+
+    '<div class="info-row"><span class="k">阶段</span><span class="vwrap">'+
+      '<select class="v" id="cStage">'+stages.map(s=>'<option'+(s===(c.stage||'问需')?' selected':'')+'>'+s+'</option>').join('')+'</select></span></div>'+
+    rowSel('预算','V02')+
+    rowSel('用途','V03')+
+    rowSel('是否含显示器','V04')+
+    rowSel('入手时间','V05')+
+    rowSel('是否接受二手','V08')+
+    rowSel('来源','V13')+
+    '<div class="info-hint">点一下就能改；没问到的留「待确认」，回复也不会催客户一次问完。</div>'+
+    '<details class="fold"><summary>备注（客户原话 / 家庭情况）</summary><div class="fold-b">'+
+      '<textarea class="in" id="cNote" rows="2">'+esc(c.note||'')+'</textarea></div></details>'+
+    '<details class="fold"><summary>报价查询（查今天卖多少，不影响回复）</summary><div class="fold-b">'+
       '<div class="row" style="margin-bottom:8px">'+(isNewbie()?'':'<label style="font-size:11px;color:var(--dim);display:flex;gap:4px;align-items:center"><input type="checkbox" id="costChk" '+(DB.settings.showCost?'checked':'')+'>显示成本（仅自己看）</label>')+'</div>'+
       '<input class="in" id="priceSearch" placeholder="搜型号 / CPU / 显卡 / 价格">'+
       '<div id="priceResults" style="margin-top:8px"></div>'+
     '</div></details>';
 
-  $('#cName').oninput=e=>{c.name=e.target.value;renderCustomers();save();};
-  $('#cStage').onchange=e=>{c.stage=e.target.value;renderCustomers();renderOthersSlots();save();};
+  $('#cName').oninput=e=>{c.name=e.target.value;renderCustomers();renderMid();save();};
+  $('#cStage').onchange=e=>{c.stage=e.target.value;renderCustomers();renderMid();save();};
   $('#cNote').oninput=e=>{c.note=e.target.value;save();};
   $$('#rightBody [data-slot]').forEach(el=>{
     const ev=el.tagName==='SELECT'?'change':'input';
-    el.addEventListener(ev,()=>{c.slots[el.dataset.slot]=el.value;save();renderCustomers();});
+    el.addEventListener(ev,()=>{c.slots[el.dataset.slot]=el.value;save();renderCustomers();renderMid();});
   });
   const cc=$('#costChk');if(cc)cc.onchange=e=>{DB.settings.showCost=e.target.checked;save();renderPriceResults();};
   $('#priceSearch').oninput=renderPriceResults;
@@ -944,12 +1132,14 @@ async function aiPolish(){
   }catch(e){toast('润色失败：'+e.message,2600);}
   finally{btn.disabled=false;btn.textContent='AI 润色';}
 }
-/* 4B：AI 直出整段回复 */
+/* 4B：AI 直出整段回复（按输入框或最后一条客户消息） */
 async function aiDirect(){
   const c=ac();
-  const msg=($('#msgInput').value||'').trim();
+  const typed=($('#msgInput')&&$('#msgInput').value||'').trim();
+  const lastCust=((c.history||[]).filter(x=>x.role==='customer').slice(-1)[0]||{}).text||'';
+  const msg=typed||lastCust;
   const filled=Object.values(c.slots||{}).filter(Boolean).join(' ');
-  if(!msg&&!filled){toast('先贴客户消息');return;}
+  if(!msg&&!filled){toast('先发一条客户消息');return;}
   const hay=[msg,c.note,filled].join(' ');
   const rules=matchRules(hay);
   const item=findItem(hay);
@@ -974,11 +1164,11 @@ async function aiDirect(){
   const btn=$('#btnAIDirect');btn.disabled=true;btn.textContent='生成中…';
   try{
     const out=await llmCall([{role:'system',content:AI_RULES},{role:'user',content:ctx+'\n请直接写出要发给客户的这一段话：第一句先正面回应客户原话，再给下一步，最多问1个问题。'}]);
-    if(msg){c.history.push({role:'customer',text:msg,ts:Date.now()});c.msgDraft='';}
+    if(typed){c.history.push({role:'customer',text:typed,ts:Date.now()});c.msgDraft='';}
     DRAFT={text:out,item:item,rule:rules[0]||{规则ID:'AI',一级分类:'AI',二级分类:'直出',禁忌:'',回答目标:'AI生成',下一步动作:''},matched:rules,checks:checkDraft(out,item,msg),original:out,msg:msg};
-    renderMid();renderCustomers();save();
+    renderMid();renderCustomers();save();closeDrawer();
   }catch(e){toast('AI 直接写整段失败：'+e.message,2600);}
-  finally{btn.disabled=false;btn.textContent='AI 直接写整段（可选）';}
+  finally{btn.disabled=false;btn.textContent='AI 直接写一条回复（可选）';}
 }
 
 /* ============ 报价表：上传 / 解析 / 版本 ============ */
@@ -1393,19 +1583,9 @@ function closeDrawer(){$('#toolDrawer').classList.remove('on');$('#drawerBg').cl
 $('#btnTools').onclick=openDrawer;
 $('#drawerClose').onclick=closeDrawer;
 $('#drawerBg').onclick=closeDrawer;
+$('#btnAIDirect').onclick=aiDirect;
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDrawer();});
-$('#btnGuide').onclick=()=>{
-  try{localStorage.removeItem('copilot_guide')}catch(e){}
-  renderMid();
-  const mid=$('#midBody');if(mid)mid.scrollTop=0;
-  toast('已展开三步使用引导');
-};
 document.addEventListener('click',e=>{
-  if(e.target.closest('[data-guide-close]')){
-    try{localStorage.setItem('copilot_guide','off')}catch(e){}
-    renderMid();toast('引导已收起，需要时可点右上角「使用说明」');
-    return;
-  }
   const demo=e.target.closest('[data-demo]');
   if(demo){
     const t=$('#msgInput');if(!t)return;
@@ -1416,6 +1596,7 @@ document.addEventListener('click',e=>{
 });
 
 $('#custSearch').oninput=renderCustomers;
+$('#typeFilter').onchange=renderCustomers;
 $('#btnAddCust').onclick=()=>{
   const name=prompt('客户称呼（如：小王 / 客32）','新客户');
   if(name===null)return;
